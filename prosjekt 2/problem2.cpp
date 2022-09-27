@@ -46,6 +46,8 @@ int main(int argc, char **argv){
 	
 	eig_sym(eigval, eigvec, A);
 	
+	// armadillo doesn't work for me so code is incomplete.
+	// compare eigval and eigvec with analytical eig.values and eig.vectors
 	
 	return 0;
 }
