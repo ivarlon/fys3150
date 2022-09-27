@@ -78,24 +78,23 @@ void jacobi_rotate(mat& A, mat& R, int k, int l)
 	double s = t*c;
 	
 	// transforming A matrix
+	double A_kk = A(k,k);
+	double A_ll = A(l,l);
 	A(k,k) = A(k,k) * c*c - 2*A(k,l) * c*s + A(l,l) * s*s;
 	A(l,l) = A(l,l) * c*c + 2*A(k,l) * c*s + A(k,k) * s*s;
+	A(k,l) = 0.;//(c*c - s*s) * A(k,l) + c*s * (A_kk - A_ll);
+	A(l,k) = A(k,l);
 	int N = A.n_rows;
 	for (int i = 0; i < N; i++)
 	{
-		double A_ik = A(i,k); // saving values from step m to be used for updating at step m+1
-		double A_il = A(i,l);
-		if (i != k)
+		if (i != k and i !=l)
 		{	
+			double A_ik = A(i,k); // saving values from step m to be used for updating at step m+1
+			double A_il = A(i,l);
 			A(i,k) = A_ik * c - A_il * s;
 			A(k,i) = A(i,k);
-		}
-		if (i!= l)
-		{	
-				// cout << "transf. row " << i << endl;
-				
-				A(i,l) = A_il * c + A_ik * s;
-				A(l,i) = A(i,l);
+			A(i,l) = A_il * c + A_ik * s;
+			A(l,i) = A(i,l);
 		}
 	}
 	
@@ -124,7 +123,6 @@ void jacobi_eigensolver(arma::mat& A, double eps, vec& eigenvalues, mat& eigenve
 		
 		jacobi_rotate(A, R, k, l);
 		max_offdiag = max_offdiag_symmetric(A, k, l);
-		if (iterations == 0){cout << A << endl;}
 		iterations ++;
 		// cout << "it.no. " << iterations << endl;
 		
@@ -139,7 +137,8 @@ void jacobi_eigensolver(arma::mat& A, double eps, vec& eigenvalues, mat& eigenve
 	}
 	else{
 		cout << "Algorithm didn't converge after " << maxiter <<" iterations." << endl;
-		cout << "Max. off-diag. element: " << max_offdiag << endl;
+		cout << "Max. off-diag. element: " << max_offdiag << " at (" << k << " " << l << ")" << endl;
+		cout << A << endl;
 	}
 }
 
@@ -153,12 +152,12 @@ int main(int argc, char **argv){
 	double a = -1./(h*h);
 	double d = 2./(h*h);
 	mat A = create_tridiagonal(N, a, d, a);
+	if (N<=10){cout << "MATRIX A \n" << A << "\n";}
 	
-	double eps = 1e-5;
+	double eps = 1e-6;
 	vec eigenvalues = zeros(N);
 	mat eigenvectors = zeros(N,N);
 	int maxiter = stoi(argv[2]);
-	//if (argc>=2){maxiter = stoi(argv[2]);}
 	int iterations = 0;
 	bool converged;
 	
@@ -168,12 +167,23 @@ int main(int argc, char **argv){
 		cout << "Algorithm converged after " << iterations << " iterations\n";
 		cout << "Analytical vs. estimated eigenvalues:\n";
 		uvec eigenvalorder = sort_index(eigenvalues);
+		cout << "eigenvalorder\n" << eigenvalorder << endl;
 		for (int i = 0; i <N; i++)
 		{
-			int j =  eigenvalorder(i) + 1;
-			double lmbda = d + 2*a*cos(j*3.1416/n_steps);
+			int j =  eigenvalorder(i) + 1; // j = 1,2,...,N
+			double lmbda = d + 2*a*cos(j*3.1416/n_steps); // analytic solution
 			cout << lmbda <<  " vs. " << eigenvalues(i) << " giving a rel. error of " << 100.*abs( (lmbda - eigenvalues(i) )/eigenvalues(i) ) << "%" << endl;
 		}
+		
+		for (int i = 0; i<N; i++){
+			if (eigenvalorder(i)<=2)
+			{
+				cout << eigenvectors.col(i) << endl;
+			}
+		}
+		if (N<=10){cout << A << endl;}
+		int k; int l;
+		cout << max_offdiag_symmetric(A, k, l) << endl;
 	}
 	return 0;
 }

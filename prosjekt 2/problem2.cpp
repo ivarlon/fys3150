@@ -16,6 +16,11 @@ mat create_tridiagonal(int N, double a, double d, double e){
 	// N-1 elements on subdiagonal have value a
 	// N-1 elements on superdiagonal have value e
 	
+	//arma::mat A = arma::mat(N,N);
+	//A.diag(-1).fill(a);
+	//A.diag(0).fill(d);
+	//A.diag(1).fill(e);
+	
 	mat A = mat(N, N, fill::eye)*d;
 	
 	A(0,1) = e; // initial superdiag. element
