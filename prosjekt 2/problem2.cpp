@@ -46,13 +46,42 @@ int main(int argc, char **argv){
 	
 	mat A = create_tridiagonal(N, a, d, a);
 	
+	// use Armadillo to find eigvalues and eigvectors
 	vec eigval;
 	mat eigvec;
 	
 	eig_sym(eigval, eigvec, A);
 	
-	// armadillo doesn't work for me so code is incomplete.
-	// compare eigval and eigvec with analytical eig.values and eig.vectors
+	// normalise
+	eigvec = normalise(eigvec);
 	
+	// sort in right order
+	uvec eigenvalorder = sort_index(eigval);
+	eigval = eigval(eigenvalorder);
+	eigvec = eigvec.cols(eigenvalorder);
+	
+	// calculate analytical solutions
+	vec eigval_anal(N, fill::zeros);
+	mat eigvec_anal(N,N, fill::zeros);
+	
+	for (int i = 1; i<=N; i++)
+	{
+		eigval_anal(i-1) = d + 2*a * cos(i*3.14159/(N+1));
+		for (int jj=1; jj<=N; jj++)
+		{
+			eigvec_anal(jj-1, i-1) = sin(jj*i*3.14159/(N+1));
+		}
+		eigvec_anal.col(i-1) = normalise(eigvec_anal.col(i-1));
+	}
+	
+	
+	// print eigenvalues and eigenvectors
+	
+	cout << "Armadillo:" << endl;
+	cout << eigval.t() << endl;
+	cout << eigvec << endl;
+	cout << "Analytical:" << endl;
+	cout << eigval_anal.t() << endl;
+	cout << eigvec_anal << endl;
 	return 0;
 }

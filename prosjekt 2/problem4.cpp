@@ -45,7 +45,7 @@ double max_offdiag_symmetric(arma::mat& A, int&k, int& l)
 	{
 		for (int j = 0; j < i; j++)
 		{
-			if (abs(A(i,j)) > abs(max_offdiag))
+			if (fabs(A(i,j)) > fabs(max_offdiag))
 			{
 				max_offdiag = A(i,j);
 				k = i;
@@ -63,9 +63,9 @@ void jacobi_rotate(mat& A, mat& R, int k, int l)
 {
 	// transforms symm. matrix A and rotation matrix R
 	
-	double tau = (A(l,l) - A(k,k)) / (2* A(k,l));
+	double tau = (A(l,l) - A(k,k)) / (2.* A(k,l));
 	double t;
-	if (tau < 0.)
+	if (tau <= 0.)
 	{
 		t = -tau - sqrt(1. + tau*tau);
 	}
@@ -74,14 +74,14 @@ void jacobi_rotate(mat& A, mat& R, int k, int l)
 		t = -tau + sqrt(1. + tau*tau);
 	}
 	
-	double c = 1/sqrt(1. + t*t);
+	double c = 1./sqrt(1. + t*t);
 	double s = t*c;
 	
 	// transforming A matrix
 	double A_kk = A(k,k);
 	double A_ll = A(l,l);
-	A(k,k) = A(k,k) * c*c - 2*A(k,l) * c*s + A(l,l) * s*s;
-	A(l,l) = A(l,l) * c*c + 2*A(k,l) * c*s + A(k,k) * s*s;
+	A(k,k) = A(k,k) * c*c - 2.*A(k,l) * c*s + A(l,l) * s*s;
+	A(l,l) = A(l,l) * c*c + 2.*A(k,l) * c*s + A(k,k) * s*s;
 	A(k,l) = 0.;//(c*c - s*s) * A(k,l) + c*s * (A_kk - A_ll);
 	A(l,k) = A(k,l);
 	int N = A.n_rows;
@@ -106,6 +106,7 @@ void jacobi_rotate(mat& A, mat& R, int k, int l)
 		R(i,k) = R_ik*c - R_il*s;
 		R(i,l) = R_il*c + R_ik*s;
 	}
+	return;
 }
 
 
@@ -119,7 +120,7 @@ void jacobi_eigensolver(arma::mat& A, double eps, vec& eigenvalues, mat& eigenve
 	// loop until A is sufficiently diagonal or max. no. of iterations is reached
 	int k; int l;
 	double max_offdiag = max_offdiag_symmetric(A, k, l);
-	while (abs(max_offdiag) > eps and iterations <= maxiter){
+	while (fabs(max_offdiag) > eps and iterations <= maxiter){
 		
 		jacobi_rotate(A, R, k, l);
 		max_offdiag = max_offdiag_symmetric(A, k, l);
@@ -128,7 +129,7 @@ void jacobi_eigensolver(arma::mat& A, double eps, vec& eigenvalues, mat& eigenve
 		
 	}
 	
-	converged = abs(max_offdiag) < eps;	
+	converged = fabs(max_offdiag) < eps;	
 	if (converged){
 		for (int i=0; i<N; i++){
 			eigenvalues(i) = A(i,i);
@@ -138,8 +139,9 @@ void jacobi_eigensolver(arma::mat& A, double eps, vec& eigenvalues, mat& eigenve
 	else{
 		cout << "Algorithm didn't converge after " << maxiter <<" iterations." << endl;
 		cout << "Max. off-diag. element: " << max_offdiag << " at (" << k << " " << l << ")" << endl;
-		cout << A << endl;
+		//cout << A << endl;
 	}
+	return;
 }
 
 int main(int argc, char **argv){
@@ -154,7 +156,7 @@ int main(int argc, char **argv){
 	mat A = create_tridiagonal(N, a, d, a);
 	if (N<=10){cout << "MATRIX A \n" << A << "\n";}
 	
-	double eps = 1e-6;
+	double eps = 1e-7;
 	vec eigenvalues = zeros(N);
 	mat eigenvectors = zeros(N,N);
 	int maxiter = stoi(argv[2]);
@@ -167,23 +169,23 @@ int main(int argc, char **argv){
 		cout << "Algorithm converged after " << iterations << " iterations\n";
 		cout << "Analytical vs. estimated eigenvalues:\n";
 		uvec eigenvalorder = sort_index(eigenvalues);
-		cout << "eigenvalorder\n" << eigenvalorder << endl;
+		eigenvalues = eigenvalues(eigenvalorder);
+		eigenvectors = eigenvectors.cols(eigenvalorder);
 		for (int i = 0; i <N; i++)
 		{
-			int j =  eigenvalorder(i) + 1; // j = 1,2,...,N
-			double lmbda = d + 2*a*cos(j*3.1416/n_steps); // analytic solution
-			cout << lmbda <<  " vs. " << eigenvalues(i) << " giving a rel. error of " << 100.*abs( (lmbda - eigenvalues(i) )/eigenvalues(i) ) << "%" << endl;
+			double lmbda = d + 2*a*cos((i+1)*3.14159/n_steps); // analytic solution
+			cout << lmbda <<  " vs. " << eigenvalues(i) << " giving a rel. error of " << 100.*fabs( (lmbda - eigenvalues(i) )/eigenvalues(i) ) << "%" << endl;
 		}
 		
-		for (int i = 0; i<N; i++){
-			if (eigenvalorder(i)<=2)
-			{
-				cout << eigenvectors.col(i) << endl;
-			}
+		for (int i = 0; i<=2; i++)
+		{
+			cout << eigenvectors.col(i) << endl;	
 		}
 		if (N<=10){cout << A << endl;}
 		int k; int l;
-		cout << max_offdiag_symmetric(A, k, l) << endl;
+		//cout << max_offdiag_symmetric(A, k, l) << endl;
+		// save eigenvectors
+		eigenvectors.save("eigenvecs.bin", arma::raw_binary);
 	}
 	return 0;
 }
