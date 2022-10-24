@@ -8,7 +8,7 @@
 
 using namespace std;
 
-// Constructor
+// Constructor for a constant applied potential
 PenningTrap::PenningTrap(double B0_in, double V0_in, double d_in, bool particleInteractions_in)
 {
     B0 = B0_in;
@@ -16,6 +16,22 @@ PenningTrap::PenningTrap(double B0_in, double V0_in, double d_in, bool particleI
     d = d_in;
     V0_d2 = V0/(d*d);
     t = 0.;
+    f = 0.;
+    omega = 0.;
+    particleInteractions = particleInteractions_in;
+}
+
+// Constructor for a time varying applied potential
+PenningTrap::PenningTrap(double B0_in, double V0_in, double d_in, 
+    double f_in, double omega_in, bool particleInteractions_in)
+{
+    B0 = B0_in;
+    V0 = V0_in;
+    d = d_in;
+    V0_d2 = V0/(d*d);
+    t = 0.;
+    f = f_in;
+    omega = omega_in;
     particleInteractions = particleInteractions_in;
 }
 
@@ -28,8 +44,8 @@ void PenningTrap::add_particle(Particle p_in)
 // External el. field at point r
 arma::vec PenningTrap::external_E_field(arma::vec r)
 {
-    // E = -V0/2d^2 * (x, y, -2z)
-    return V0_d2 * arma::vec({r(0), r(1), -2.*r(2)});
+    // E = -V0(1 + fcos(wt))/2d^2 * (x, y, -2z)
+    return V0_d2 * (1. + f*cos(omega*t) ) * arma::vec({r(0), r(1), -2.*r(2)});
 }
 
 // External mag. field at point r
@@ -56,10 +72,19 @@ arma::vec PenningTrap::total_force_external(int i)
 {
     int qi = particles[i].q;
     arma::vec ri = particles[i].r;
-    arma::vec vi = particles[i].v;
-    arma::vec E = external_E_field(ri);
-    arma::vec B = external_B_field(ri);
-    return qi * ( E + arma::cross(vi,B) );
+    
+    // Check if particle is outside trap
+    if (arma::norm(ri) > d)
+    {
+        return arma::vec(3, arma::fill::zeros);
+    }
+    else
+    {
+        arma::vec vi = particles[i].v;
+        arma::vec E = external_E_field(ri);
+        arma::vec B = external_B_field(ri);
+        return qi * ( E + arma::cross(vi,B) );
+    }
 }
 
 // Total force on particle i from other particles
@@ -94,16 +119,17 @@ arma::vec PenningTrap::total_force(int i)
 void PenningTrap::evolve_RK4(double dt)
 {
     // create a copy of particles at time t_i
-    //double t_i = t;
     vector<Particle> particles_copy = particles;
+    
+    // create a list to contain k1, k2, k3, k4
     vector<vector<arma::vec>> k_r;
     vector<vector<arma::vec>> k_v;
-    //vector<arma::vec> k_r;
-    //vector<arma::vec> k_v;
+    
+    // declare k_r(i), k_v(i)
     arma::vec k_r_(3);
     arma::vec k_v_(3);
     
-    // calculating k_1
+    // calculating k_1 for each particle
     vector<arma::vec> k_r1;
     k_r.push_back(k_r1);
     vector<arma::vec> k_v1;
@@ -202,4 +228,18 @@ void PenningTrap::evolve_forward_Euler(double dt)
     }
     
     t += dt;
+}
+
+int PenningTrap::particles_remaining()
+{
+    int nRemaining = 0;
+    for (Particle& p_i : particles)
+    {
+        if (arma::norm(p_i.r) < d)
+        {
+            nRemaining += 1;
+        }
+    }
+    
+    return nRemaining;
 }

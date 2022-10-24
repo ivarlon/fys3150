@@ -9,13 +9,19 @@ class PenningTrap
 {
     public:
     
+    // Constructor for a constant applied potential
     PenningTrap(double B0_in, double V0_in, double d_in, bool particleInteractions_in);
+    
+    // Constructor for a time varying applied potential
+    PenningTrap(double B0_in, double V0_in, double d_in, double f_in, double omega_in, bool particleInteractions_in);
     
     double B0, V0, d; // mag. field strength, el. potential and characteristic scale
     
     double V0_d2; // V0/d^2
     
     double t; // time
+    
+    double f, omega; // amplitude and ang. frequency of applied el. potential
     
     bool particleInteractions; // turn on (true) or off (false) part. interactions
     
@@ -47,5 +53,8 @@ class PenningTrap
     
     // Evolve the system one time step dt using Forward Euler
     void evolve_forward_Euler(double dt);
+    
+    // Calculate no. of particles remaining in trap (r < d)
+    int PenningTrap::particles_remaining();
 
 };
