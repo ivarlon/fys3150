@@ -27,6 +27,9 @@ class PenningTrap
     
     std::vector<Particle> particles; // list containing each Particle
     
+    // Reset trap (t=0, no particles)
+    void reset_trap();
+    
     // Add a particle to the trap
     void add_particle(Particle p_in);
     
@@ -55,6 +58,6 @@ class PenningTrap
     void evolve_forward_Euler(double dt);
     
     // Calculate no. of particles remaining in trap (r < d)
-    int PenningTrap::particles_remaining();
+    int particles_remaining();
 
 };

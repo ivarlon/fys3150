@@ -35,6 +35,14 @@ PenningTrap::PenningTrap(double B0_in, double V0_in, double d_in,
     particleInteractions = particleInteractions_in;
 }
 
+// Reset trap (t = 0, no particles)
+void PenningTrap::reset_trap()
+{
+    std::vector<Particle> particles_empty;
+    particles = particles_empty;
+    t = 0.;
+}
+
 // Add a particle to the trap
 void PenningTrap::add_particle(Particle p_in)
 {
