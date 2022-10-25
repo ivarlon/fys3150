@@ -11,6 +11,7 @@ using namespace std;
 int q = 1; // charge [e]
 double m = 40.08; // mass [u]
 
+/*
 void print_particle_positions(std::vector<Particle>& particles)
 {
     // prints position x_i y_i z_i and velocity vx_i vy_i vz_i for each particle i
@@ -21,9 +22,11 @@ void print_particle_positions(std::vector<Particle>& particles)
     }
     cout << endl;
 }
+*/
 
 void save_data(PenningTrap& trap, std::ofstream& r_file, std::ofstream& v_file)
 {
+    // saves position and velocity data to input files
     for (Particle p_i : trap.particles)
     {
         for (int i = 0; i <= 2; i++)
@@ -38,6 +41,7 @@ void save_data(PenningTrap& trap, std::ofstream& r_file, std::ofstream& v_file)
 
 void test_run_one_particle(PenningTrap& trap)
 {
+    // add one particle to trap
     arma::vec r1("20 0 20");
     arma::vec v1("0 25 0");
     Particle p1(q, m, r1, v1);
@@ -53,6 +57,7 @@ void test_run_one_particle(PenningTrap& trap)
     
     save_data(trap, r_file, v_file);
     
+    // integrate eqs of motion
     double T = 50.; //us
     int nSteps = 4000;
     double dt = T/nSteps;
@@ -72,7 +77,7 @@ void simulate_two_particles(PenningTrap& trap)
         // reset trap
         trap.reset_trap();
         
-        // turn on/off particle interactions
+        // turn on/off Coulomb interactions
         trap.particleInteractions = particleInteractions;
         
         // adding two particles
@@ -124,6 +129,7 @@ void simulate_two_particles(PenningTrap& trap)
 
 void performance_tests(PenningTrap& trap)
 {
+    // check numerical accuracy for various timesteps for RK4 and FE
     std::vector<int> n_list;
     n_list.push_back(4000);
     n_list.push_back(8000);
@@ -197,12 +203,14 @@ void initialise_particles(PenningTrap& trap, int nParticles, bool notRandom)
 
 void resonance_exploration(PenningTrap& trap)
 {
+    // runs simulation with a periodically varying el. field
+    
     // turn off particle interactions for faster performance
     trap.particleInteractions = false;
     
-    // create list of amplitudes
-    std::vector<double> f_list;
-    f_list.push_back(0.1); f_list.push_back(0.4); f_list.push_back(0.7);
+    // create list of amplitudes (using string most convenient for later creating filename string)
+    std::vector<std::string> f_list;
+    f_list.push_back("0.1"); f_list.push_back("0.4"); f_list.push_back("0.7");
     
     // create array of frequencies
     int nFreq = 116;
@@ -215,13 +223,13 @@ void resonance_exploration(PenningTrap& trap)
     int nSteps = 25000;
     double dt = T/nSteps;
     
-    for (double f : f_list)
+    for (std::string f : f_list)
     {
         cout << "f = " << f << endl;
         
         // creating a data file
         std::string filename;
-        filename = "particles_remaining_0." + std::to_string(std::round(10*f)) + ".csv";
+        filename = "particles_remaining_" + f + ".csv";
         std::ofstream outfile;
         outfile.open(filename);
         
@@ -237,7 +245,7 @@ void resonance_exploration(PenningTrap& trap)
             // reset and reinitialise trap
             trap.reset_trap();
             initialise_particles(trap, nParticles, true);
-            trap.f = f;
+            trap.f = std::stod(f);
             trap.omega = omega;
             
             // integration loop
@@ -253,8 +261,8 @@ void resonance_exploration(PenningTrap& trap)
 
 void resonance_finestructure(PenningTrap& trap)
 {
-    // turn off particle interactions for faster performance
-    trap.particleInteractions = false;
+    // looking for resonances with better resolution in frequency
+    // with and without Coulomb interactions
     
     // create array of frequencies
     int nFreq = 151;
@@ -318,47 +326,10 @@ int main(int argc, char **argv)
     bool particleInteractions = true;
     PenningTrap trap(B0, V0, d, particleInteractions);
     
-    //double omega_z = sqrt( 2*q*V0/(m*d*d) ); // (us)^(-1) = MHz
-    //std::cout << omega_z << std::endl;
-    /*
-    arma::vec r1("20 0 20");
-    arma::vec v1("0 25 0");
-    Particle p1(q, m, r1, v1);
-    trap.add_particle(p1);
-    
-    arma::vec r2("0 25 0");
-    arma::vec v2("0 40 5");
-    Particle p2(q, m, r2, v2);
-    
-    trap.add_particle(p2);
-    
-    arma::vec r3("2 2 0");
-    arma::vec v3("4 0 5");
-    Particle p3(q, m, r3, v3);
-    
-    //trap.add_particle(p3);
-    
-    int nParticles = 100;
-    initialise_particles(trap, nParticles);
+    /* 
+    Uncomment line below to run desired function
     */
-    double T = 50.; //us
-    int nSteps = 4000;
-    double dt = T/nSteps;
-    /*std::vector<arma::vec> r_list;
-    r_list.push_back(p1.r);
-    std::vector<arma::vec> v_list;
-    v_list.push_back(p1.v);
-    */
-    //print_particle_positions(trap.particles);
     
-    /*for (int i = 0; i < nSteps; i++)
-    {
-        trap.evolve_RK4(dt);
-        //print_particle_positions(trap.particles);
-        //if (i%100 == 0){cout << i << trap.particles.size() << endl;}
-        
-    }
-    */
     
     test_run_one_particle(trap);
     //simulate_two_particles(trap);
