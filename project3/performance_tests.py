@@ -48,7 +48,7 @@ for j, method in enumerate(["RK4", "FE"]):
         r = get_position(method, n_i)
         r_anal = analytic(t)
         rel_error = np.linalg.norm(r - r_anal, axis = 1) / np.linalg.norm(r_anal, axis = 1)
-        ax.plot(t, rel_error, label=f"h=50/{n_i}")
+        ax.plot(t, rel_error, label=f"$h_{i+1}$=50/{n_i}")
         delta_max[j][i] = np.max( np.abs(r_anal - r) )
         print("delta_max", delta_max[j][i])
     ax.legend()
@@ -58,6 +58,7 @@ for j, method in enumerate(["RK4", "FE"]):
         ax.set_title("4th order Runge-Kutta")
     else:
         ax.set_title("Forward Euler")
+    ax.set_yscale("log")
 fig0.tight_layout(); fig1.tight_layout()
 h = T/n_list
 r_err_RK4 = 1/3 * np.sum( np.log( delta_max[0][1:] / delta_max[0][:-1] ) / np.log( h[1:]/h[:-1] ) )
