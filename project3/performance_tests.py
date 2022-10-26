@@ -63,9 +63,9 @@ fig0.tight_layout(); fig1.tight_layout()
 h = T/n_list
 r_err_RK4 = 1/3 * np.sum( np.log( delta_max[0][1:] / delta_max[0][:-1] ) / np.log( h[1:]/h[:-1] ) )
 r_err_FE = 1/3 * np.sum( np.log( delta_max[1][1:] / delta_max[1][:-1] ) / np.log( h[1:]/h[:-1] ) )
-
 print("Error convergence rates:")
 print("RK4: ", r_err_RK4)
 print("FE: ", r_err_FE)
+print("= average of", np.log(delta_max[1][1:] / delta_max[1][:-1] ) / np.log( h[1:]/h[:-1] ))
 
 plt.show()
