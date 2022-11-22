@@ -10,7 +10,7 @@ Defines a Lattice class containing spins. Has methods to flip spin, calculate E 
 ##### main.cpp
 Main file. Contains the metropolis algorithm. To compile, run the command
 ```
-	g++ main.cpp src/Lattice.cpp -fopenmp -o main -std=c++11 (optimisation -O1 or -O2 or -O3) (link to armadillo)
+	g++ main.cpp src/Lattice.cpp -fopenmp -o main -std=c++11 (optimisation -O1 or -O2 or -O3) -I include
 ```
 To run the file, type
 ```
