@@ -9,11 +9,11 @@ Defines a Lattice class containing spins. Has methods to flip spin, calculate E 
 
 ##### main.cpp
 Main file. Contains the metropolis algorithm. To compile, run the command
-	g++ main.cpp src/Lattice.cpp -fopenmp -o main -std=c++11 (optimisation -O1 or -O2 or -O3) (link to armadillo)
+		g++ main.cpp src/Lattice.cpp -fopenmp -o main -std=c++11 (optimisation -O1 or -O2 or -O3) (link to armadillo)
 To run the file, type
-	main L n_cycles ordered_lattice save_results temperature
+		main L n_cycles ordered_lattice save_results temperature
 OR
-	main L n_cycles ordered_lattice save_results minimum_temperature maximum_temperature n_temperatures use_parallelisation
+		main L n_cycles ordered_lattice save_results minimum_temperature maximum_temperature n_temperatures use_parallelisation
 and hit enter. Here,
 * ordered_lattice is a bool = 0, 1. If true, initial configuration is all parallel spins. If false, randomly initialised spin lattice.
 * save_results is a bool = 0, 1. If true, saves cycle number, energy and magnetisation to a .csv file
