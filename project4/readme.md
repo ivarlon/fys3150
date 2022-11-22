@@ -53,3 +53,6 @@ and
 	main L 1000000 0 1 2.27 2.35 9 1
 for L = 40,60,80,100.
 ##### warning: this creates a lot of .csv files: 4*20 = 80 of them...
+
+##### problem9.py
+Estimates the critical temperature for an infinte lattice by extrapolating from data gathered from the plots from problem8.py.
