@@ -18,7 +18,7 @@ To run the file, type
 ```
 OR
 ```
-		main L n_cycles ordered_lattice save_results minimum_temperature maximum_temperature n_temperatures use_parallelisation
+	main L n_cycles ordered_lattice save_results minimum_temperature maximum_temperature n_temperatures use_parallelisation
 ```
 and hit enter. Here,
 * ordered_lattice is a bool = 0, 1. If true, initial configuration is all parallel spins. If false, randomly initialised spin lattice.
