@@ -2,7 +2,7 @@
 Defines a Lattice class
 parameters:
     L (int) - length of lattice
-    T (double) - temperature
+    ordered (bool) - whether to start from state of all spin-up or random orientations
 */
 
 # include <iostream>
@@ -17,7 +17,6 @@ Lattice::Lattice(int L_in, bool ordered)
 {
     L = L_in; // lattice size
     N = L*L; // no. of spins
-    //S = mat(L, L, fill::ones);
     if (ordered)
     {
         S = mat(L, L, fill::ones);
