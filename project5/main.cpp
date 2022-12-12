@@ -56,9 +56,9 @@ cx_mat initialise_wave_packet( int n_inner, double h,
     return U;
 }
 
-cx_mat create_A_matrix(int n_inner, cx_vec a, complex<double> r)
+sp_cx_mat create_A_matrix(int n_inner, cx_vec a, complex<double> r)
 {
-    cx_mat A(n_inner*n_inner, n_inner*n_inner);
+    sp_cx_mat A(n_inner*n_inner, n_inner*n_inner);
     //A.diag() = a;
     //A.diag(n_inner).fill(-r);
     int sub_idx, diag_idx;
@@ -112,9 +112,9 @@ int main(int argc, char* argv[])
     // creating A and B matrices
     complex<double> r = i*dt/(2.*h*h);
     cx_vec a = ones(n_inner*n_inner)*(1. + 4.*r) + 0.5*i*dt*V.as_col();
-    cx_mat A = create_A_matrix(n_inner, a, r);
+    sp_cx_mat A = create_A_matrix(n_inner, a, r);
     cx_vec b = ones(n_inner*n_inner)*(1. - 4.*r) - 0.5*i*dt*V.as_col();
-    cx_mat B = create_A_matrix(n_inner, b, -r);
+    sp_cx_mat B = create_A_matrix(n_inner, b, -r);
 
     cx_mat U;
     U = initialise_wave_packet(n_inner, h, x_center, x_spread, p_x, y_center, y_spread, p_y);
@@ -139,8 +139,8 @@ int main(int argc, char* argv[])
     for (int t=1; t<n_timepoints; t++)
     {
         Bu = B*u;
-        u_ = solve(A, Bu);
-        u = u_;
+        spsolve(u, A, Bu, "superlu");
+        //u = u_;
         U = reshape(u, n_inner, n_inner);
         cout << 100.*t/n_timepoints << "%" << endl;
 
