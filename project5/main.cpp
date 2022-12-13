@@ -18,7 +18,6 @@ void normalise_state(cx_mat& U)
 {
     // normalises state matrix U using the sum of |u_ij|^2
     double s = real(accu(U % conj(U)));
-    cout << "s = " << s << endl;
     U = U/sqrt(s);
 }
 
@@ -65,7 +64,6 @@ sp_cx_mat create_A_matrix(int n_inner, cx_vec a, complex<double> r)
     for (sub_idx=0; sub_idx<n_inner; sub_idx++)
     {
         // looping over submatrices
-
         for (diag_idx=0; diag_idx < n_inner - 1; diag_idx++)
         {
             // looping over diagonal in submatrix
@@ -76,11 +74,16 @@ sp_cx_mat create_A_matrix(int n_inner, cx_vec a, complex<double> r)
             if (sub_idx < n_inner - 1)
             {
                 // set superduperdiagonal A(i,i+M-2) (not valid for final submatrix, hence an if test)
-                A(sub_idx*n_inner + diag_idx, (sub_idx+1)*n_inner) = -r;
+                A(sub_idx*n_inner + diag_idx, (sub_idx+1)*n_inner + diag_idx) = -r;
             }
         }
         // set final diagonal element in submatrix
-        A(sub_idx*n_inner +  diag_idx, sub_idx*n_inner + diag_idx) = a(sub_idx*n_inner + diag_idx);
+        A(sub_idx*n_inner + diag_idx, sub_idx*n_inner + diag_idx) = a(sub_idx*n_inner + diag_idx);
+        if (sub_idx < n_inner - 1)
+            {
+                // set superduperdiagonal A(i,i+M-2) (not valid for final submatrix, hence an if test)
+                A(sub_idx*n_inner + diag_idx, (sub_idx+1)*n_inner + diag_idx) = -r;
+            }
         
     }
     A = symmatu(A, false); // mirroring upper and lower triangular part
@@ -89,23 +92,28 @@ sp_cx_mat create_A_matrix(int n_inner, cx_vec a, complex<double> r)
 
 int main(int argc, char* argv[])
 {
+    if (argc != 10)
+    {
+        cout << "Please enter:" << endl;
+        cout << "<name of potential file> <dt> <T> <x_center> <x_spread> <p_x> <y_center> <y_spread> <p_y>" << endl;
+        return 1;
+    }
     string potential = argv[1];
-    double h = stod(argv[2]);
-    double dt = stod(argv[3]);
-    double T = stod(argv[4]);
-    double x_center = stod(argv[5]);
-    double x_spread = stod(argv[6]);
-    double p_x = stod(argv[7]);
-    double y_center = stod(argv[8]);
-    double y_spread = stod(argv[9]);
-    double p_y = stod(argv[10]);
+    double dt = stod(argv[2]);
+    double T = stod(argv[3]);
+    double x_center = stod(argv[4]);
+    double x_spread = stod(argv[5]);
+    double p_x = stod(argv[6]);
+    double y_center = stod(argv[7]);
+    double y_spread = stod(argv[8]);
+    double p_y = stod(argv[9]);
 
     // loading potential matrix
     mat V;
-    V.load(potential, raw_ascii);
+    V.load(potential + ".dat", raw_ascii);
 
     int n_inner = V.n_cols; // number of inner points = M-2
-    h = 1./(n_inner+1);
+    double h = 1./(n_inner+1); // spatial stepsize
 
     cout << "h = " << h << endl;
 
@@ -116,51 +124,46 @@ int main(int argc, char* argv[])
     cx_vec b = ones(n_inner*n_inner)*(1. - 4.*r) - 0.5*i*dt*V.as_col();
     sp_cx_mat B = create_A_matrix(n_inner, b, -r);
 
+    // creating grid for wave function (boundary points = 0 are omitted)
     cx_mat U;
     U = initialise_wave_packet(n_inner, h, x_center, x_spread, p_x, y_center, y_spread, p_y);
 
-    cx_vec u, u_;
+    cx_vec u; // vector containing wave function grid points
     u = U.as_col();
     cx_vec Bu;
 
-    int n_timepoints = T/dt + 1;
+    int n_timepoints = T/dt + 1; // no. of timepoints
     
+    // initialising arrays of data
     cube U_squared = cube(n_inner, n_inner, n_timepoints);
     cube U_real = cube(n_inner, n_inner, n_timepoints);
     cube U_imag = cube(n_inner, n_inner, n_timepoints);
-    cout << "u size " << size(u) << endl;
-    cout << n_inner*n_inner << endl;
-    cout << "DEBUG 1" << endl;
-    //U = reshape()
+
     U_squared.slice(0) = real( U % conj(U) );
     U_real.slice(0) = real(U);
     U_imag.slice(0) = imag(U);
 
+    // integration loop
     for (int t=1; t<n_timepoints; t++)
     {
+        // solving A*u(n+1) = B*u(n)
         Bu = B*u;
-        spsolve(u, A, Bu, "superlu");
-        //u = u_;
-        U = reshape(u, n_inner, n_inner);
+        spsolve(u, A, Bu, "lapack");
+        
+        U = reshape(u, n_inner, n_inner); // reshaping vector to grid
+        
         cout << 100.*t/n_timepoints << "%" << endl;
 
+        // storing data
         U_squared.slice(t) = real( U % conj(U) );
         U_real.slice(t) = real(U);
         U_imag.slice(t) = imag(U);
     }
     
-
-    U_squared.save("p.bin");
-    U_real.save("real.bin");
-    U_imag.save("imag.bin");
-    //cout << A << endl;
-    // mat A_ = ones(n_inner*n_inner, 4);
-    // A_(3,2) = 10;
-    // cout << a << endl;
-    // cout << endl;
-    // vec A_vec = A_.as_col();
-    // cout<< A_vec << endl;
-    // cout << A_vec(3 + 2*n_inner*n_inner) << endl;
+    // saving data
+    U_squared.save(potential + "_T_" + argv[3] + "_p.bin");
+    U_real.save(potential + "_T_" + argv[3] + "_real.bin");
+    U_imag.save(potential + "_T_" + argv[3] + "_imag.bin");
 
     return 0;
 }
