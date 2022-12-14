@@ -3,9 +3,9 @@ import pyarma as pa
 import matplotlib.pyplot as plt
 
 T = 0.008
-for potential in ["no_potential"]:#, "double_slit"]:
+for potential in ["no_potential", "double_slit"]:
     U = pa.cube()
-    U.load(potential + "_p.bin")
+    U.load(potential + "_T_" + str(T) + "_p.bin")
     U = np.array(U)
     p = np.sum(U, axis=1)
     p = np.sum(p, axis=1)
@@ -13,12 +13,12 @@ for potential in ["no_potential"]:#, "double_slit"]:
     fig, ax = plt.subplots(figsize=(4,4))
     ax.plot(t, p-1)
     if potential=="no_potential":
-        title = "No barrier"
+        title = "Tom boks"
     elif potential=="double_slit":
-        title = "Double slit"
+        title = "Dobbelspalte"
     ax.set_title(title)
-    ax.set_xlabel("t")
-    ax.set_ylabel("$p-1$")
+    ax.set_xlabel("$t$")
+    ax.set_ylabel("$p_{tot}-1$")
     fig.tight_layout()
     plt.show()
-    #fig.savefig(potential+".pdf")
+    fig.savefig(potential+".pdf")
